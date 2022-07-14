@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -60,7 +61,7 @@ public class WaveFunctionCollapseTilemap2D : MonoBehaviour
             _activeCollection.LoadFromTilemap(exampleTilemap);
         }
         
-        builder = new Tilemap2DWfcBuilder(size, _activeCollection);
+        builder = new Tilemap2DWfcBuilder(size, _activeCollection, randomSeed);
         _queue = builder.Queue;
 
         if (_cancellationTokenSource is { IsCancellationRequested: false })
@@ -71,11 +72,16 @@ public class WaveFunctionCollapseTilemap2D : MonoBehaviour
 
         _cancellationTokenSource = new CancellationTokenSource();
         tilemap.ClearAllTiles();
-        var res = await builder.Build(_cancellationTokenSource.Token);
+        var res = await Task.Run(()=> builder.Build(_cancellationTokenSource.Token));
+
+
+        if(res.Item1)
+            Debug.Log("<COLOR=GREEN>SUCCESS</COLOR>");
+        else
+            Debug.Log("<COLOR=red>FAIL</COLOR>");
 
         if(!res.Item1 || _cancellationTokenSource.IsCancellationRequested) return;
 
-        await Task.Yield();
         result = res.Item2;
         
         for (var index = 0; index < builder.Results.Length; index++)
@@ -178,6 +184,8 @@ public class WaveFunctionCollapseTilemap2D : MonoBehaviour
             }
         }
   
+        if (builder == null) return;
+        
         if(!_activeCollection && constantUpdate) return;
         for (var index = 0; index < builder.Results.Length; index++)
         {

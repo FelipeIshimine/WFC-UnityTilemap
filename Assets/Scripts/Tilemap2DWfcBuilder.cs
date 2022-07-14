@@ -5,8 +5,8 @@ using UnityEngine;
 public class Tilemap2DWfcBuilder : WaveFunctionCollapseBuilder
 {
     private readonly Vector2Int _size;
-    public Tilemap2DWfcBuilder(Vector2Int size, TileBaseCollection tileBaseCollection) : 
-        base(size.x*size.y, tileBaseCollection.Count, new int[size.x*size.y][], tileBaseCollection)
+    public Tilemap2DWfcBuilder(Vector2Int size, TileBaseCollection tileBaseCollection, int seed) : 
+        base(size.x*size.y, tileBaseCollection.Count, new int[size.x*size.y][], tileBaseCollection, seed)
     {
         _size = size;
         for (int i = 0; i < NodeCount; i++)
