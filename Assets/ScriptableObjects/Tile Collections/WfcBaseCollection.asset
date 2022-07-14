@@ -1,0 +1,94 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13e24d69e22c4cabb66061d0ac9fdcd0, type: 3}
+  m_Name: WfcBaseCollection
+  m_EditorClassIdentifier: 
+  <Elements>k__BackingField:
+  - {fileID: 11400000, guid: 78f072d929b2e2749a479f61e653bbb5, type: 2}
+  - {fileID: 11400000, guid: b94bd4db78921cf43a542f80b14ac05a, type: 2}
+  - {fileID: 11400000, guid: 711791b62f96e55498d0f27ccc578947, type: 2}
+  <Compatibilities>k__BackingField:
+  - <Sides>k__BackingField:
+    - <Values>k__BackingField:
+      - <Tile>k__BackingField: {fileID: 11400000, guid: 78f072d929b2e2749a479f61e653bbb5,
+          type: 2}
+        <Weight>k__BackingField: 117
+      - <Tile>k__BackingField: {fileID: 11400000, guid: 711791b62f96e55498d0f27ccc578947,
+          type: 2}
+        <Weight>k__BackingField: 1
+    - <Values>k__BackingField:
+      - <Tile>k__BackingField: {fileID: 11400000, guid: 78f072d929b2e2749a479f61e653bbb5,
+          type: 2}
+        <Weight>k__BackingField: 117
+      - <Tile>k__BackingField: {fileID: 11400000, guid: b94bd4db78921cf43a542f80b14ac05a,
+          type: 2}
+        <Weight>k__BackingField: 1
+    - <Values>k__BackingField:
+      - <Tile>k__BackingField: {fileID: 11400000, guid: 78f072d929b2e2749a479f61e653bbb5,
+          type: 2}
+        <Weight>k__BackingField: 117
+      - <Tile>k__BackingField: {fileID: 11400000, guid: b94bd4db78921cf43a542f80b14ac05a,
+          type: 2}
+        <Weight>k__BackingField: 1
+      - <Tile>k__BackingField: {fileID: 11400000, guid: 711791b62f96e55498d0f27ccc578947,
+          type: 2}
+        <Weight>k__BackingField: 1
+    - <Values>k__BackingField:
+      - <Tile>k__BackingField: {fileID: 11400000, guid: 78f072d929b2e2749a479f61e653bbb5,
+          type: 2}
+        <Weight>k__BackingField: 117
+      - <Tile>k__BackingField: {fileID: 11400000, guid: b94bd4db78921cf43a542f80b14ac05a,
+          type: 2}
+        <Weight>k__BackingField: 1
+      - <Tile>k__BackingField: {fileID: 11400000, guid: 711791b62f96e55498d0f27ccc578947,
+          type: 2}
+        <Weight>k__BackingField: 1
+    - <Values>k__BackingField: []
+    - <Values>k__BackingField: []
+  - <Sides>k__BackingField:
+    - <Values>k__BackingField:
+      - <Tile>k__BackingField: {fileID: 11400000, guid: 78f072d929b2e2749a479f61e653bbb5,
+          type: 2}
+        <Weight>k__BackingField: 1
+    - <Values>k__BackingField:
+      - <Tile>k__BackingField: {fileID: 11400000, guid: 711791b62f96e55498d0f27ccc578947,
+          type: 2}
+        <Weight>k__BackingField: 1
+    - <Values>k__BackingField:
+      - <Tile>k__BackingField: {fileID: 11400000, guid: 78f072d929b2e2749a479f61e653bbb5,
+          type: 2}
+        <Weight>k__BackingField: 1
+    - <Values>k__BackingField:
+      - <Tile>k__BackingField: {fileID: 11400000, guid: 78f072d929b2e2749a479f61e653bbb5,
+          type: 2}
+        <Weight>k__BackingField: 1
+    - <Values>k__BackingField: []
+    - <Values>k__BackingField: []
+  - <Sides>k__BackingField:
+    - <Values>k__BackingField:
+      - <Tile>k__BackingField: {fileID: 11400000, guid: b94bd4db78921cf43a542f80b14ac05a,
+          type: 2}
+        <Weight>k__BackingField: 1
+    - <Values>k__BackingField:
+      - <Tile>k__BackingField: {fileID: 11400000, guid: 78f072d929b2e2749a479f61e653bbb5,
+          type: 2}
+        <Weight>k__BackingField: 1
+    - <Values>k__BackingField:
+      - <Tile>k__BackingField: {fileID: 11400000, guid: 78f072d929b2e2749a479f61e653bbb5,
+          type: 2}
+        <Weight>k__BackingField: 1
+    - <Values>k__BackingField:
+      - <Tile>k__BackingField: {fileID: 11400000, guid: 78f072d929b2e2749a479f61e653bbb5,
+          type: 2}
+        <Weight>k__BackingField: 1
+    - <Values>k__BackingField: []
+    - <Values>k__BackingField: []
