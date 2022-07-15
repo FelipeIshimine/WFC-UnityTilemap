@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 
 [System.Serializable]
@@ -13,7 +12,7 @@ public class IndexPriorityQueue
     private readonly int[] _positionToIndex;
     private readonly int[] _indexToPosition;
     
-    private bool[] contains;
+    private bool[] _contains;
 
     public IReadOnlyList<int> Priority => _priority;
     public IReadOnlyList<int> PositionToIndex => _positionToIndex;
@@ -26,7 +25,7 @@ public class IndexPriorityQueue
         _priority = new int[capacity];
         _positionToIndex = new int[capacity];
         _indexToPosition = new int[capacity];
-        contains = new bool[capacity];
+        _contains = new bool[capacity];
         for (var index = 0; index < capacity; index++)
         {
             _priority[index] = MaxValue();
@@ -37,10 +36,10 @@ public class IndexPriorityQueue
 
     public void Enqueue(int index, int priority)
     {
-        if (contains[index])
+        if (_contains[index])
             throw new Exception("Value already in queue");
         
-        contains[index] = true;
+        _contains[index] = true;
 
         _positionToIndex[Size] = index;
         _indexToPosition[index] = Size;
@@ -60,20 +59,23 @@ public class IndexPriorityQueue
             throw new Exception("Empty");
         
         int index = _positionToIndex[0];
-        contains[index] = false;
-        
-        Swap(0, --Size);
+        _contains[index] = false;
 
-        _positionToIndex[Size] = -1;
-        _indexToPosition[index] = -1;
+        Swap(0, --Size);
         
+        int i = _positionToIndex[Size];
+        _positionToIndex[Size] = -1;
+        _indexToPosition[i] = -1;
+        _priority[i] = MaxValue();
+        Down(0);
+
         return index;
     }
 
 
     public void Update(int index, int priority)
     {
-        if(!contains[index])
+        if(!_contains[index])
             throw new Exception($"Index:{index} not in queue");
 
         int oldPriority = _priority[index];
@@ -98,41 +100,56 @@ public class IndexPriorityQueue
         }
     }
 
-    private void Down(int index)
+    private void Down(int iPos)
     {
-        while (HasLeftChild(index))
+        while (HasLeftChild(iPos))
         {
-            int smallestChildIndex = GetLeftChildIndex(index);
-            int leftChildPriority = _priority[GetLeftChildIndex(index)];
-            if (HasRightChild(index) && _priority[GetRightChildIndex(index)] < leftChildPriority)
-                smallestChildIndex = GetRightChildIndex(index);
+            int smallestChildIPosition = GetLeftChildIndexPos(iPos);
 
-            if (Compare(index,smallestChildIndex))
+            bool hasRightChild = HasRightChild(iPos);
+            
+            if (hasRightChild && Compare(GetRightChildIndexPos(iPos), smallestChildIPosition))
+            {
+                smallestChildIPosition = GetRightChildIndexPos(iPos);
+            }
+
+            if (Compare(iPos,smallestChildIPosition))
                 break;
-            Swap(index,smallestChildIndex);
-            index = smallestChildIndex;
+            
+            Swap(iPos,smallestChildIPosition);
+            iPos = smallestChildIPosition;
         }
     }
 
-
-    private bool Compare(int i, int j) => _priority[_positionToIndex[i]] < _priority[_positionToIndex[j]]; 
+    private bool Compare(int i, int j)
+    {
+        try
+        {
+            return _priority[_positionToIndex[i]] < _priority[_positionToIndex[j]];
+        }
+        catch (Exception e)
+        {
+            throw new Exception($"i:{i} j:{j} {_priority.Length} Vi:{_positionToIndex[i]} Vj:{_positionToIndex[j]}");
+        }
+    } 
 
     private void Swap(int i, int j)
     {
         int iIndex = _positionToIndex[i];
         int jIndex = _positionToIndex[j];
+        //Debug.Log($"SWAP [{_indexToPosition[iIndex]}]:{iIndex} > [{_indexToPosition[jIndex]}]:{jIndex}");
         
         (_indexToPosition[iIndex], _indexToPosition[jIndex]) = (_indexToPosition[jIndex], _indexToPosition[iIndex]);
         (_positionToIndex[i], _positionToIndex[j]) = (_positionToIndex[j], _positionToIndex[i]);
         
     }
     
-    public int GetParentIndex(int i) => (int)Math.Round((i - 2f) / 2, MidpointRounding.AwayFromZero);
-    public int GetLeftChildIndex(int i) => i * 2 + 1;
-    public int GetRightChildIndex(int i) => i * 2 + 2;
+    public int GetParentIndex(int i) => (int)Math.Ceiling((i - 2f) / 2);
+    public int GetLeftChildIndexPos(int i) => i * 2 + 1;
+    public int GetRightChildIndexPos(int i) => i * 2 + 2;
 
-    public bool HasLeftChild(int i) => GetLeftChildIndex(i) < Size;
-    public bool HasRightChild(int i) => GetRightChildIndex(i) < Size;
+    public bool HasLeftChild(int i) => GetLeftChildIndexPos(i) < Size;
+    public bool HasRightChild(int i) => GetRightChildIndexPos(i) < Size;
     public bool HasParent(int i) => GetParentIndex(i) >= 0;
 
 
@@ -141,11 +158,11 @@ public class IndexPriorityQueue
 
     public void EnqueueOrUpdate(int index, int i)
     {
-        if(contains[index])
+        if(_contains[index])
             Update(index,i);
         else
             Enqueue(index,i);
     }
 
-    public bool Contains(int index) => contains[index];
+    public bool Contains(int index) => _contains[index];
 }

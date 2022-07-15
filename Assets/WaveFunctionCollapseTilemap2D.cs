@@ -12,10 +12,11 @@ public class WaveFunctionCollapseTilemap2D : MonoBehaviour
     public Vector2Int size;
     public TileBaseCollection collection;
     
-    
     public Tilemap exampleTilemap;
+
+    public Tilemap startingTilemap;
     
-    public Tilemap tilemap;
+    public Tilemap resultTilemap;
 
     public Vector3Int value;
     
@@ -60,8 +61,14 @@ public class WaveFunctionCollapseTilemap2D : MonoBehaviour
             _activeCollection = ScriptableObject.CreateInstance<TileBaseCollection>();
             _activeCollection.LoadFromTilemap(exampleTilemap);
         }
+
+        (int coordinate, int index)[] startingValues = Array.Empty<(int,int)>();
+        if (startingTilemap)
+            startingValues = GetStartingValues(startingTilemap, _activeCollection);
         
-        builder = new Tilemap2DWfcBuilder(size, _activeCollection, randomSeed);
+        Debug.Log($"Example tilemap has {startingValues.Length} starting values");
+        
+        builder = new Tilemap2DWfcBuilder(size, _activeCollection, randomSeed, startingValues);
         _queue = builder.Queue;
 
         if (_cancellationTokenSource is { IsCancellationRequested: false })
@@ -71,9 +78,10 @@ public class WaveFunctionCollapseTilemap2D : MonoBehaviour
         }
 
         _cancellationTokenSource = new CancellationTokenSource();
-        tilemap.ClearAllTiles();
+        
+        resultTilemap.ClearAllTiles();
+        
         var res = await Task.Run(()=> builder.Build(_cancellationTokenSource.Token));
-
 
         if(res.Item1)
             Debug.Log("<COLOR=GREEN>SUCCESS</COLOR>");
@@ -87,15 +95,35 @@ public class WaveFunctionCollapseTilemap2D : MonoBehaviour
         for (var index = 0; index < builder.Results.Length; index++)
         {
             int tileResult = builder.Results[index];
-            tilemap.SetTile(IndexToCoordinate(index), _activeCollection.Elements[tileResult]);
+            resultTilemap.SetTile(IndexToCoordinate(index), _activeCollection.Elements[tileResult]);
         }
         
-        /*for (var index = 0; index < result.Length; index++)
-        {
-            int i = result[index];
-            tilemap.SetTile(new Vector3Int(index % size.x, index / size.x, 0), _activeCollection.Elements[i]);
-        }*/
+    }
+
+    [Button]
+    private (int coordinate,int index)[] GetStartingValues(Tilemap tilemap, TileBaseCollection tileBaseCollection)
+    {
+        List<(int, int)> startingValues = new List<(int, int)>();
+        var cellBounds = tilemap.cellBounds;
+
+        cellBounds.xMin = Mathf.Max(0, cellBounds.xMin);
+        cellBounds.yMin = Mathf.Max(0, cellBounds.yMin);
         
+        cellBounds.xMax = Mathf.Min(cellBounds.xMax, size.x);
+        cellBounds.yMax = Mathf.Min(cellBounds.yMax, size.y);
+        
+        Dictionary<TileBase, int> tileToIndex = tileBaseCollection.GetTileToIndex();
+
+        for (int x = cellBounds.xMin; x < cellBounds.xMax; x++)
+        {
+            for (int y = cellBounds.yMin; y < cellBounds.yMax; y++)
+            {
+                var coordinate = new Vector3Int(x, y, 0);
+                var tile = tilemap.GetTile(coordinate);
+                if (tile) startingValues.Add((CoordinateToIndex(coordinate), tileToIndex[tile]));
+            }
+        }
+        return startingValues.ToArray();
     }
 
     [Button] public void Continue() => builder.Continue();
@@ -127,6 +155,8 @@ public class WaveFunctionCollapseTilemap2D : MonoBehaviour
 
     private void OnDrawGizmos()
     {
+        Gizmos.DrawWireCube(new Vector3(size.x,.1f,size.y)/2,new Vector3(size.x,0,size.y));
+        
         
         if(drawPriorityQueue)
         {
@@ -147,14 +177,14 @@ public class WaveFunctionCollapseTilemap2D : MonoBehaviour
                     if (index >= PositionToIndex.Count)
                         break;
 
-                    Gizmos.color = Color.green;
-                    var pos = GetPosition(cycles, separation, index);
-                    UnityEditor.Handles.Label(pos,
-                        $"{PositionToIndex[index]}:{(PositionToIndex[index] != -1 ? Priority[PositionToIndex[index]] : "-")}");
+                    var pos = GetPosition(cycles, separation, i);
+                    UnityEditor.Handles.Label(pos, $"[{index}]{PositionToIndex[index]}:{(PositionToIndex[index] != -1 ? Priority[PositionToIndex[index]] : "-")}", GUI.skin.box);
 
                     Gizmos.color = Color.white;
                     if (_queue.HasParent(index))
-                        Gizmos.DrawLine(pos, GetPosition(cycles - 1, separation, _queue.GetParentIndex(index)));
+                    {
+                        Gizmos.DrawLine(pos, GetPosition(cycles - 1, separation, _queue.GetParentIndex(index) - Mathf.RoundToInt(Mathf.Pow(2, cycles-1)-1)));
+                    }
                 }
 
                 total += count;
@@ -178,7 +208,7 @@ public class WaveFunctionCollapseTilemap2D : MonoBehaviour
                 }
 
                 for (int index = resultsCount; index > builder.ResultCount; --index)
-                    tilemap.SetTile(IndexToCoordinate(index), null);
+                    resultTilemap.SetTile(IndexToCoordinate(index), null);
             
                 resultsCount = builder.ResultCount;
             }
@@ -191,16 +221,22 @@ public class WaveFunctionCollapseTilemap2D : MonoBehaviour
         {
             int tileResult = builder.Results[index];
             if (tileResult != -1)
-                tilemap.SetTile(IndexToCoordinate(index), _activeCollection.Elements[tileResult]);
+                resultTilemap.SetTile(IndexToCoordinate(index), _activeCollection.Elements[tileResult]);
             else
-                tilemap.SetTile(IndexToCoordinate(index), null);
+                resultTilemap.SetTile(IndexToCoordinate(index), null);
         }
     }
 
     private Vector3 GetPosition(int cycles, float separation, int index)
     {
-        float startOffset = -(Mathf.Pow(2,cycles)  * separation + .5f * separation) * .5f;
-        return transform.position + cycles * separation * Vector3.up + Vector3.left * (startOffset + (index - Mathf.Pow(2,cycles)) * separation);
+        int count = Mathf.RoundToInt(Mathf.Pow(2, cycles));
+        
+        float width = count * .5f;
+        
+        float startOffset = -width * .5f;
+
+        float normalizedPosition =  (float)(index+1) / (count+1);
+        return transform.position + cycles * separation * Vector3.up + Vector3.right * (startOffset + normalizedPosition * width);
     }
 
     private Vector3 IndexToWorldPosition(int index) => new Vector3(index % size.x + .5f,0, index / size.x + .5f) ;
@@ -208,6 +244,7 @@ public class WaveFunctionCollapseTilemap2D : MonoBehaviour
     private int CoordinateToIndex(Vector3Int coordinate) => (coordinate.y * size.x) + coordinate.x;
 
 
+    
 
 
 }

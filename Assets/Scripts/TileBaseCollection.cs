@@ -6,10 +6,12 @@ using UnityEngine.Tilemaps;
 [CreateAssetMenu(menuName = "WFC/Create WfcBaseCollection", fileName = "WfcBaseCollection", order = 0)]
 public class TileBaseCollection : WfcCollection<TileBase>
 {
+    private List<TileBase> tiles = new List<TileBase>();
 
     [Button]
     public void LoadFromTilemap(Tilemap tilemap)
     {
+        tiles.Clear();
         var cellBounds = tilemap.cellBounds;
         HashSet<TileBase> tileSet = new HashSet<TileBase>();
 
@@ -25,6 +27,7 @@ public class TileBaseCollection : WfcCollection<TileBase>
                     var tile = tilemap.GetTile(coordinate);
                     if(!tile) continue;
 
+                    
                     tileSet.Add(tile);
 
                     if (!adjacencies.TryGetValue(tile, out var multiset))
@@ -73,6 +76,7 @@ public class TileBaseCollection : WfcCollection<TileBase>
         int i = 0;
         foreach (TileBase tileBase in tileSet)
         {
+            tiles.Add(tileBase);
             Elements[i] = tileBase;
 
             List<Side> sides = new List<Side>();
@@ -87,7 +91,6 @@ public class TileBaseCollection : WfcCollection<TileBase>
                 
                 sides.Add(new Side(pairs.ToArray()));
             }
-
             Compatibilities[i++] = new CompatibilityArray(sides.ToArray());
         }
     }
@@ -105,6 +108,15 @@ public class TileBaseCollection : WfcCollection<TileBase>
         return new Side();
     }
 
+    public int GetIndexOf(TileBase tile) => tiles.IndexOf(tile);
+
+    public Dictionary<TileBase, int> GetTileToIndex()
+    {
+        Dictionary<TileBase, int> map = new Dictionary<TileBase, int>();
+        for (int i = 0; i < tiles.Count; i++)
+            map[tiles[i]] = i;
+        return map;
+    }
 }
 
 

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 public abstract class WaveFunctionCollapseBuilder
 {
+    private readonly (int coordinate, int valueIndex)[] _startingValues;
     protected readonly int NodeCount;
     protected readonly int[][] Adjacencies;
     public readonly int[] Entropy;
@@ -108,8 +109,7 @@ public abstract class WaveFunctionCollapseBuilder
 
         protected override void OnDo()
         {
-            /*SelectedStateIndex = Random.Range(0, _builder.Entropy[_index]);*/
-
+            _oldEntropy = _builder.Entropy[_index];
             _oldEntropy = _builder.Entropy[_index];
             _oldValue = _builder.Results[_index];
          
@@ -128,8 +128,13 @@ public abstract class WaveFunctionCollapseBuilder
         public override string ToString() => $"<color=cyan>C</color> I:{_index} VI:{SelectedStateIndex} V:{_builder.Results[_index]}";
     }
 
-    protected WaveFunctionCollapseBuilder(int nodeCount,  int nodeTypeCounts, int[][] adjacencies, WfcCollection compatibilityCollection, int seed)
+    protected WaveFunctionCollapseBuilder(int nodeCount,  int nodeTypeCounts, int[][] adjacencies, WfcCollection compatibilityCollection, int seed) : this(nodeCount,nodeTypeCounts,adjacencies,compatibilityCollection,seed, Array.Empty<(int, int)>())
     {
+    }
+    
+    protected WaveFunctionCollapseBuilder(int nodeCount,  int nodeTypeCounts, int[][] adjacencies, WfcCollection compatibilityCollection, int seed, (int,int)[] startingValues) 
+    {
+        _startingValues = startingValues;
         _random = new Random(seed);
         NodeCount = nodeCount;
         Adjacencies = adjacencies;
@@ -140,16 +145,31 @@ public abstract class WaveFunctionCollapseBuilder
         History = new Stack<Command>();
         _queue = new IndexPriorityQueue(nodeCount);
         Results = new int[nodeCount];
-        
+
+        HashSet<int> startingValuesIndex = new HashSet<int>();
+
+        foreach ((int, int) tuple in startingValues)
+            startingValuesIndex.Add(tuple.Item1);
+
         for (int i = 0; i < NodeCount; i++)
         {
             Results[i] = -1;
-            _queue.Enqueue(i,nodeTypeCounts);
+            if(!startingValuesIndex.Contains(i)) _queue.Enqueue(i,nodeTypeCounts);
             for (int j = 0; j < nodeTypeCounts; j++)
                 NodesStates[i, j] = j;
 
             Entropy[i] = nodeTypeCounts;
         }
+
+        foreach ((int index, int valueIndex) in startingValues)
+        {
+            Results[index] = NodesStates[index,valueIndex];
+            Entropy[index] = 0;
+
+            for (int j = 0; j < nodeTypeCounts; j++)
+                NodesStates[index, j] = Results[index];
+        }
+        
 
         OrderedResults = new int[NodeCount];
     }
@@ -160,12 +180,25 @@ public abstract class WaveFunctionCollapseBuilder
     {
         _cancellationToken = cancellationToken;
 
-        int startingIndex = _random.Next(0,NodeCount);
-        //int startingIndex = Random.Range(0,NodeCount);
-        _queue.Update(startingIndex,0);
-        
         bool backtrack = false;
         Stack<Command> milestones = new Stack<Command>();
+        
+        if(_startingValues.Length == 0)
+        {
+            int startingIndex = _random.Next(0, NodeCount);
+            _queue.Update(startingIndex, 0);
+        }
+        else
+        {
+            foreach (var value in _startingValues)
+            {
+                var milestone = new CollapseStateCommand(this, value.coordinate, value.valueIndex).Do();
+                milestones.Push(milestone);
+                History.Push(milestone);
+                await StartPropagation(value.coordinate); 
+            }
+        }
+  
 
         while (_queue.Size > 0)
         {
@@ -345,7 +378,8 @@ public abstract class WaveFunctionCollapseBuilder
         var count = --Entropy[index];
 
         (NodesStates[index, i], NodesStates[index, count]) = (NodesStates[index, count], NodesStates[index, i]);
-        _queue.Update(index, Entropy[index]);
+            
+        /*if(_queue.Contains(index))*/ _queue.Update(index, Entropy[index]);
     }
 
     private void Add(int index, int i)
