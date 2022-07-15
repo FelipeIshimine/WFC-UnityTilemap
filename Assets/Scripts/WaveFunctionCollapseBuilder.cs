@@ -192,10 +192,13 @@ public abstract class WaveFunctionCollapseBuilder
         {
             foreach (var value in _startingValues)
             {
-                var milestone = new CollapseStateCommand(this, value.coordinate, value.valueIndex).Do();
+                new CollapseStateCommand(this, value.coordinate, value.valueIndex).Do();/*
+                var milestone = 
+                        ;
                 milestones.Push(milestone);
-                History.Push(milestone);
-                await StartPropagation(value.coordinate); 
+                History.Push(milestone);*/
+                bool error = !await StartPropagation(value.coordinate);
+                if (error) throw new Exception("Error");
             }
         }
   
