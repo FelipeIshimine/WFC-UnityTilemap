@@ -140,6 +140,10 @@ public abstract class WaveFunctionCollapseBuilder
                 _builder.AddPossibility(_index,i);
 
             _builder.Swap(_index,0, SelectedStateIndex);
+            
+            /*if(!_builder.Queue.Contains(_index))
+                _builder.Queue.Enqueue(_index, _oldEntropy);*/
+            
         }
         
         public override string ToString() => $"<color=cyan>C</color> I:{_index} VI:{SelectedStateIndex} V:{_builder.Results[_index]}";
@@ -191,14 +195,14 @@ public abstract class WaveFunctionCollapseBuilder
             Entropy[i] = nodeTypeCounts;
         }
 
-        /*foreach ((int index, int valueIndex) in startingValues)
+        foreach ((int index, int valueIndex) in startingValues)
         {
             Results[index] = NodesStates[index,valueIndex];
             Entropy[index] = 0;
 
             for (int j = 0; j < nodeTypeCounts; j++)
                 NodesStates[index, j] = Results[index];
-        }*/
+        }
         
         OrderedResults = new int[NodeCount];
         
@@ -279,6 +283,12 @@ public abstract class WaveFunctionCollapseBuilder
                 await Pause();
             }
 
+            if (ResultCount == Results.Length)
+            {
+                Debug.LogWarning("SUCCESSFUL FAUL. Se llego a un resultado, pero quedaronobjetos invalidos en cola");
+                break;
+            }
+            
             int index = _queue.DequeueIndex();
 
 
@@ -336,7 +346,7 @@ public abstract class WaveFunctionCollapseBuilder
                 return i;
         }
 
-        throw new Exception($"Value outside of weights. {selectedWeight}/{totalWeight}");
+        throw new Exception($"Value outside of weights. {index}> {selectedWeight}/{totalWeight}");
     }
 
     private async Task<bool> StartPropagation(int index)
@@ -452,7 +462,9 @@ public abstract class WaveFunctionCollapseBuilder
         
         Swap(index, i, count);
 
-        _queue.EnqueueOrUpdate(index, Entropy[index]);
+        //if(_queue.Contains(index))
+        
+        if(Results[index] == -1) _queue.EnqueueOrUpdate(index, Entropy[index]);
 
         int tileIndex = NodesStates[index, i];
         for (int dir = 0; dir < Directions; dir++)
