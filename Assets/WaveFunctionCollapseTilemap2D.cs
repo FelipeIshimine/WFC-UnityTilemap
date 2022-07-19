@@ -67,8 +67,26 @@ public class WaveFunctionCollapseTilemap2D : MonoBehaviour
             startingValues = GetStartingValues(startingTilemap, _activeCollection);
         
         Debug.Log($"Example tilemap has {startingValues.Length} starting values");
+
+        int nodeCount = size.x * size.y;
+
+        int[][] adjacencies = new int[nodeCount][];
         
-        builder = new Tilemap2DWfcBuilder(size, _activeCollection, randomSeed, startingValues);
+        for (int i = 0; i < nodeCount; i++)
+        {
+            adjacencies[i] = new int[4];
+
+            int rowStartIndex = (i / size.x) * size.x;
+            
+            adjacencies[i][0] = Mathf.RoundToInt(Mathf.Repeat(Mathf.Repeat(i - 1, size.x) + rowStartIndex, nodeCount));
+            adjacencies[i][1] = Mathf.RoundToInt(Mathf.Repeat(Mathf.Repeat(i + 1, size.x) + rowStartIndex, nodeCount));
+
+            adjacencies[i][2] = Mathf.RoundToInt(Mathf.Repeat(i - size.x, nodeCount));
+            adjacencies[i][3] = Mathf.RoundToInt(Mathf.Repeat(i + size.x, nodeCount));
+        }
+        
+        
+        builder = new Tilemap2DWfcBuilder(size, _activeCollection, adjacencies,randomSeed, startingValues);
         _queue = builder.Queue;
 
         if (_cancellationTokenSource is { IsCancellationRequested: false })

@@ -5,22 +5,11 @@ using UnityEngine;
 public class Tilemap2DWfcBuilder : WaveFunctionCollapseBuilder
 {
     private readonly Vector2Int _size;
-    public Tilemap2DWfcBuilder(Vector2Int size, TileBaseCollection tileBaseCollection, int seed, (int, int)[]startingValues) : 
-        base(size.x*size.y, tileBaseCollection.Count, new int[size.x*size.y][], tileBaseCollection, seed, startingValues)
+    public Tilemap2DWfcBuilder(Vector2Int size, TileBaseCollection tileBaseCollection, int[][] adjacencies, int seed, (int, int)[]startingValues) : 
+        base(size.x*size.y, tileBaseCollection.Count, adjacencies/*new int[size.x*size.y][]*/, tileBaseCollection, seed, startingValues)
     {
         _size = size;
-        for (int i = 0; i < NodeCount; i++)
-        {
-            Adjacencies[i] = new int[4];
-
-            int rowStartIndex = (i / size.x) * size.x;
-            
-            Adjacencies[i][0] = Mathf.RoundToInt(Mathf.Repeat(Mathf.Repeat(i - 1, size.x) + rowStartIndex, NodeCount));
-            Adjacencies[i][1] = Mathf.RoundToInt(Mathf.Repeat(Mathf.Repeat(i + 1, size.x) + rowStartIndex, NodeCount));
-
-            Adjacencies[i][2] = Mathf.RoundToInt(Mathf.Repeat(i - size.x, NodeCount));
-            Adjacencies[i][3] = Mathf.RoundToInt(Mathf.Repeat(i + size.x, NodeCount));
-        }
+    
     }
 
     public void DrawGizmos()

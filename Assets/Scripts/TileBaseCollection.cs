@@ -108,6 +108,9 @@ public class TileBaseCollection : WfcCollection<TileBase>
         return new Side();
     }
 
+    
+
+
     public int GetIndexOf(TileBase tile) => tiles.IndexOf(tile);
 
     public Dictionary<TileBase, int> GetTileToIndex()
@@ -117,6 +120,8 @@ public class TileBaseCollection : WfcCollection<TileBase>
             map[tiles[i]] = i;
         return map;
     }
+    
+    
 }
 
 

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -69,6 +70,28 @@ public class WfcCollection<T> : WfcCollection
 
         return compatibles;
     }
+    
+    public override int GetWeight(int x, int y, int dir)
+    {
+        T elementY = Elements[y];
+
+        try
+        {
+            foreach (var pair in Compatibilities[x].Sides[dir].Values)
+            {
+                if (pair.Tile.Equals(elementY))
+                    return pair.Weight;
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.Log($"x:{x} y:{y} dir:{dir}");
+            throw;
+        }
+       
+
+        return 0;
+    }
 }
 
 
@@ -77,5 +100,7 @@ public abstract class WfcCollection : ScriptableObject
     public abstract bool IsCompatible(int x, int y, int dir);
 
     public abstract bool[] GetCompatibles(int x, int y, int dir);
+
+    public abstract int GetWeight(int x, int y, int dir);
 
 }
