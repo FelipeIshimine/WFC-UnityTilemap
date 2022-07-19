@@ -380,15 +380,15 @@ public abstract class WaveFunctionCollapseBuilder
     {
         var count = --Entropy[index];
 
-        (NodesStates[index, i], NodesStates[index, count]) = (NodesStates[index, count], NodesStates[index, i]);
-            
+        Swap(index, i, count);
         /*if(_queue.Contains(index))*/ _queue.Update(index, Entropy[index]);
     }
 
     private void Add(int index, int i)
     {
         var count = Entropy[index]++;
-        (NodesStates[index, i], NodesStates[index, count]) = (NodesStates[index, count], NodesStates[index, i]);
+        
+        Swap(index, i, count);
 
         _queue.EnqueueOrUpdate(index, Entropy[index]);
     }
@@ -399,4 +399,5 @@ public abstract class WaveFunctionCollapseBuilder
 
     private static readonly string[] ArrowSymbol = { "←","→","↓","↑" };
 
+    private void Swap(int index, int x, int y) => (NodesStates[index, x], NodesStates[index, y]) = (NodesStates[index, y], NodesStates[index, x]);
 }
