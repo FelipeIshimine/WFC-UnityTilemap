@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using UnityEngine;
 using Random = System.Random;
 
 public abstract class WaveFunctionCollapseBuilder
@@ -17,7 +16,7 @@ public abstract class WaveFunctionCollapseBuilder
     public readonly int[,] Weight;
     private readonly int _nodeTypeCounts;
 
-    private readonly int Directions;
+    private readonly int _directions;
     private readonly WfcCollection _compatibilityCollection;
     private readonly bool _stepByStep;
 
@@ -170,44 +169,30 @@ public abstract class WaveFunctionCollapseBuilder
         _queue = new IndexPriorityQueue(nodeCount);
         Results = new int[nodeCount];
         Weight = new int[nodeCount, nodeTypeCounts];
-        Directions = 4;
+        _directions = 4;
 
-        HashSet<int> startingValuesIndex = new HashSet<int>();
+        Dictionary<int,int> startingValuesIndex = new Dictionary<int,int>();
 
         foreach ((int, int) tuple in startingValues)
-            startingValuesIndex.Add(tuple.Item1);
+            startingValuesIndex.Add(tuple.Item1, tuple.Item2);
 
         for (int i = 0; i < NodeCount; i++)
         {
             Results[i] = -1;
             
-            /*if(!startingValuesIndex.Contains(i)) 
-                _queue.Enqueue(i,nodeTypeCounts);
             for (int j = 0; j < nodeTypeCounts; j++)
-                NodesStates[i, j] = j;*/
-
-            for (int j = 0; j < nodeTypeCounts; j++)
-            {
                 NodesStates[i, j] = j;
-                AddPossibility(i,j);
+
+            if (startingValuesIndex.ContainsKey(i))
+                AddPossibility(i,startingValuesIndex[i]);
+            else
+            {
+                for (int j = 0; j < nodeTypeCounts; j++)
+                    AddPossibility(i,j);
             }
-
-            Entropy[i] = nodeTypeCounts;
-        }
-
-        foreach ((int index, int valueIndex) in startingValues)
-        {
-            Results[index] = NodesStates[index,valueIndex];
-            Entropy[index] = 0;
-
-            for (int j = 0; j < nodeTypeCounts; j++)
-                NodesStates[index, j] = Results[index];
         }
         
         OrderedResults = new int[NodeCount];
-        
-        
-        
     }
 
     public void Continue() => _paused = false;
@@ -223,19 +208,6 @@ public abstract class WaveFunctionCollapseBuilder
         {
             int startingIndex = _random.Next(0, NodeCount);
             _queue.Update(startingIndex, 0);
-        }
-        else
-        {
-            foreach (var value in _startingValues)
-            {
-                new CollapseStateCommand(this, value.coordinate, value.valueIndex).Do();/*
-                var milestone = 
-                        ;
-                milestones.Push(milestone);
-                History.Push(milestone);*/
-                bool error = !await StartPropagation(value.coordinate);
-                if (error) throw new Exception("Error");
-            }
         }
   
 
@@ -282,20 +254,10 @@ public abstract class WaveFunctionCollapseBuilder
 
                 await Pause();
             }
-
-            if (ResultCount == Results.Length)
-            {
-                Debug.LogWarning("SUCCESSFUL FAUL. Se llego a un resultado, pero quedaronobjetos invalidos en cola");
-                break;
-            }
             
             int index = _queue.DequeueIndex();
-
-
             
             var milestone = new CollapseStateCommand(this, index, GetRandomIndex(index)).Do();
-            
-            
             
             milestones.Push(milestone);
             History.Push(milestone);
@@ -327,17 +289,8 @@ public abstract class WaveFunctionCollapseBuilder
             totalWeight += Weight[index,NodesStates[index,i]];
         int selectedWeight = 0;
 
-        try
-        {
-            selectedWeight = _random.Next(0, totalWeight);
-        }
-        catch (Exception e)
-        {
-            Debug.Log(totalWeight);
-            throw;
-        }
-       
-        //Debug.Log($"SelectedWeight {selectedWeight}/{totalWeight}");
+        selectedWeight = _random.Next(0, totalWeight);
+
         totalWeight = 0;
         for (int i = 0; i < entropy; i++)
         {
@@ -462,12 +415,13 @@ public abstract class WaveFunctionCollapseBuilder
         
         Swap(index, i, count);
 
-        //if(_queue.Contains(index))
+        if (Results[index] != -1)
+            throw new Exception("WTF");
         
-        if(Results[index] == -1) _queue.EnqueueOrUpdate(index, Entropy[index]);
-
-        int tileIndex = NodesStates[index, i];
-        for (int dir = 0; dir < Directions; dir++)
+        _queue.EnqueueOrUpdate(index, Entropy[index]);
+        
+        int tileIndex = NodesStates[index, count];
+        for (int dir = 0; dir < _directions; dir++)
         {
             var neighbour = Adjacencies[index][dir];
             for (int neighbourTileIndex = 0; neighbourTileIndex < _nodeTypeCounts; neighbourTileIndex++)
@@ -476,20 +430,20 @@ public abstract class WaveFunctionCollapseBuilder
         
     }
     
-    
-    //Retorna false si el estado es incompatible y no hay mas posibles estados
     private void RemovePossibility(int index, int i)
     {
         int tileIndex = NodesStates[index, i];
         
         var count = --Entropy[index];
 
+        if (count == 0)
+            throw new Exception("CANT HAVE COUNT 0");
+        
         Swap(index, i, count);
 
-        if(_queue.Contains(index))
-            _queue.Update(index, Entropy[index]);
+        if(_queue.Contains(index)) _queue.Update(index, Entropy[index]);
         
-        for (int dir = 0; dir < Directions; dir++)
+        for (int dir = 0; dir < _directions; dir++)
         {
             var neighbour = Adjacencies[index][dir];
             for (int neighbourTileIndex = 0; neighbourTileIndex < _nodeTypeCounts; neighbourTileIndex++)

@@ -43,10 +43,10 @@ public class WaveFunctionCollapseTilemap2D : MonoBehaviour
     [ShowInInspector, HorizontalGroup] public IReadOnlyList<int> PositionToIndex => _queue.PositionToIndex;
     [ShowInInspector, HorizontalGroup] public IReadOnlyList<int> IndexToPosition => _queue.IndexToPosition;
     
-    [Button] public void InitializeQueue(int maxSize) => _queue = new IndexPriorityQueue(maxSize);
-    [Button] public void Enqueue(int index, int priority) => _queue.Enqueue(index, priority);
-    [Button] public int Dequeue() => _queue.DequeueIndex();
-    [Button] public void UpdatePriority(int index, int priority) => _queue.Update(index, priority);
+    public void InitializeQueue(int maxSize) => _queue = new IndexPriorityQueue(maxSize);
+    public void Enqueue(int index, int priority) => _queue.Enqueue(index, priority);
+    public int Dequeue() => _queue.DequeueIndex();
+    public void UpdatePriority(int index, int priority) => _queue.Update(index, priority);
 
     
     [Button]
@@ -118,7 +118,6 @@ public class WaveFunctionCollapseTilemap2D : MonoBehaviour
         
     }
 
-    [Button]
     private (int coordinate,int index)[] GetStartingValues(Tilemap tilemap, TileBaseCollection tileBaseCollection)
     {
         List<(int, int)> startingValues = new List<(int, int)>();
@@ -146,29 +145,13 @@ public class WaveFunctionCollapseTilemap2D : MonoBehaviour
 
     [Button] public void Continue() => builder.Continue();
 
-    [Button]
-    public void Test()
-    {
-        IndexedPriorityQueue<int> queue = new IndexedPriorityQueue<int>(8);
-        
-        queue.Enqueue(0,10);
-        queue.Enqueue(1,4);
-        queue.Enqueue(2,3);
-        queue.Enqueue(3,7);
-
-        queue.Set(0,2);
-
-        for (int i = 0; i < 5; i++)
-        {
-            Debug.Log(queue.DequeueIndex());
-        }
-        
-    }
+    [Button] public void Stop() => _cancellationTokenSource?.Cancel();
 
     [Button]
-    public void Stop()
+    public void Clear()
     {
-        _cancellationTokenSource?.Cancel();
+        resultTilemap.ClearAllTiles();
+        builder = null;
     }
 
     private void OnDrawGizmos()

@@ -50,8 +50,8 @@ public class IndexPriorityQueue
 
     public bool IsEmpty() => Size == 0;
 
-    public int PeekPriority() => _positionToIndex[0];
-    public int PeekIndex() => _priority[_positionToIndex[0]];
+    public int PeekPriority() => _priority[_positionToIndex[0]];
+    public int PeekIndex() => _positionToIndex[0];
 
     public int DequeueIndex()
     {
